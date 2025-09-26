@@ -196,11 +196,19 @@ def verify_row_23(df, summary_row):
         'Refusal – s.314(6) Frivolous or vexatious or bad faith (access)'
     ]
     
-    # Filter data
+    # Filter for Partial Access and check if ANY Part X provision appears in the string
     filtered_df = df[
-        (df[closure_reason_col] == 'Partial Access') & 
-        (df[provisions_col].isin(part_x_denial_provisions))
+        (df[closure_reason_col] == 'Partial Access')
     ]
+    
+    # Check if any Part X provision is contained in the provisions string
+    def contains_part_x_denial(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return any(provision in provisions_str for provision in part_x_denial_provisions)
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_part_x_denial)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -210,6 +218,11 @@ def verify_row_23(df, summary_row):
     
     clients_match = expected_clients == actual_clients
     cases_match = expected_cases == actual_cases
+    
+    # Debug output
+    print(f"   Found {len(filtered_df)} cases with Part X denials")
+    if len(filtered_df) > 0:
+        print(f"   Sample provisions: {filtered_df[provisions_col].head(3).tolist()}")
     
     return {
         'row': summary_row['row'],
@@ -232,10 +245,18 @@ def verify_row_24(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for Partial Access and check if records not found appears
     filtered_df = df[
-        (df[closure_reason_col] == 'Partial Access') & 
-        (df[provisions_col] == 'Refusal - Some records do not exist or cannot be found')
+        (df[closure_reason_col] == 'Partial Access')
     ]
+    
+    def contains_records_not_found(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'records do not exist or cannot be found' in provisions_str or 'No record exists, or none found' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_records_not_found)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -267,10 +288,18 @@ def verify_row_25(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for Partial Access and check if "Part X does not apply" appears
     filtered_df = df[
-        (df[closure_reason_col] == 'Partial Access') & 
-        (df[provisions_col] == 'Refusal – Part X does not apply')
+        (df[closure_reason_col] == 'Partial Access')
     ]
+    
+    def contains_part_x_does_not_apply(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'Part X does not apply' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_part_x_does_not_apply)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -302,10 +331,29 @@ def verify_row_26(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for Partial Access and "Other" but NOT containing other specific provisions
     filtered_df = df[
-        (df[closure_reason_col] == 'Partial Access') & 
-        (df[provisions_col] == 'Refusal - Other')
+        (df[closure_reason_col] == 'Partial Access')
     ]
+    
+    def is_other_only(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        
+        provisions_str = str(provisions_str)
+        # Should contain "Other" but NOT contain Part X provisions or cannot be severed
+        has_other = 'Refusal - Other' in provisions_str
+        
+        # Should NOT contain other specific refusal reasons
+        has_other_refusals = any(refusal in provisions_str for refusal in [
+            's.312(1)(a)', 's.312(1)(b)', 's.312(1)(c)', 's.312(1)(d)',
+            's.314(6)', 'Part X does not apply', 'cannot reasonably be severed',
+            'records do not exist', 'No record exists'
+        ])
+        
+        return has_other and not has_other_refusals
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(is_other_only)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -337,10 +385,18 @@ def verify_row_27(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for Partial Access and check if "cannot reasonably be severed" appears
     filtered_df = df[
-        (df[closure_reason_col] == 'Partial Access') & 
-        (df[provisions_col] == 'Refusal - Requestor\'s Information cannot reasonably be severed')
+        (df[closure_reason_col] == 'Partial Access')
     ]
+    
+    def contains_cannot_be_severed(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'cannot reasonably be severed' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_cannot_be_severed)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -382,10 +438,18 @@ def verify_row_28(df, summary_row):
         'Refusal – s.314(6) Frivolous or vexatious or bad faith (access)'
     ]
     
+    # Filter for No Information Released and check if ANY Part X provision appears
     filtered_df = df[
-        (df[closure_reason_col] == 'No Information Released') & 
-        (df[provisions_col].isin(part_x_denial_provisions))
+        (df[closure_reason_col] == 'No Information Released')
     ]
+    
+    def contains_part_x_denial(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return any(provision in provisions_str for provision in part_x_denial_provisions)
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_part_x_denial)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -417,10 +481,18 @@ def verify_row_29(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for No Information Released and check if records not found appears
     filtered_df = df[
-        (df[closure_reason_col] == 'No Information Released') & 
-        (df[provisions_col] == 'Refusal - No record exists, or none found')
+        (df[closure_reason_col] == 'No Information Released')
     ]
+    
+    def contains_records_not_found(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'No record exists, or none found' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_records_not_found)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -452,10 +524,18 @@ def verify_row_30(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for No Information Released and check if "Part X does not apply" appears
     filtered_df = df[
-        (df[closure_reason_col] == 'No Information Released') & 
-        (df[provisions_col] == 'Refusal – Part X does not apply')
+        (df[closure_reason_col] == 'No Information Released')
     ]
+    
+    def contains_part_x_does_not_apply(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'Part X does not apply' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_part_x_does_not_apply)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -487,10 +567,29 @@ def verify_row_31(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for No Information Released and "Other" but NOT containing other specific provisions
     filtered_df = df[
-        (df[closure_reason_col] == 'No Information Released') & 
-        (df[provisions_col] == 'Refusal - Other')
+        (df[closure_reason_col] == 'No Information Released')
     ]
+    
+    def is_other_only(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        
+        provisions_str = str(provisions_str)
+        # Should contain "Other" but NOT contain Part X provisions or cannot be severed
+        has_other = 'Refusal - Other' in provisions_str
+        
+        # Should NOT contain other specific refusal reasons
+        has_other_refusals = any(refusal in provisions_str for refusal in [
+            's.312(1)(a)', 's.312(1)(b)', 's.312(1)(c)', 's.312(1)(d)',
+            's.314(6)', 'Part X does not apply', 'cannot reasonably be severed',
+            'No record exists'
+        ])
+        
+        return has_other and not has_other_refusals
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(is_other_only)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -522,10 +621,18 @@ def verify_row_32(df, summary_row):
     case_num_col = 'Personal Information Case #'
     clients_col = 'Personal Information Number of Clients'
     
+    # Filter for No Information Released and check if "cannot reasonably be severed" appears
     filtered_df = df[
-        (df[closure_reason_col] == 'No Information Released') & 
-        (df[provisions_col] == 'Refusal - Requestor\'s Information cannot reasonably be severed')
+        (df[closure_reason_col] == 'No Information Released')
     ]
+    
+    def contains_cannot_be_severed(provisions_str):
+        if pd.isna(provisions_str):
+            return False
+        provisions_str = str(provisions_str)
+        return 'cannot reasonably be severed' in provisions_str
+    
+    filtered_df = filtered_df[filtered_df[provisions_col].apply(contains_cannot_be_severed)]
     
     expected_clients = filtered_df[clients_col].sum()
     expected_cases = filtered_df[case_num_col].nunique()
@@ -808,6 +915,7 @@ VERIFICATION RESULTS
 🔍 Verifying Row 22: Full Access
 
 🔍 Verifying Row 23: Partial Access - Part X Deny
+   Found 0 cases with Part X denials
 
 🔍 Verifying Row 24: Partial Access - Records Not Found
 
@@ -856,20 +964,20 @@ FINAL VERIFICATION REPORT
    ✅ Clients: Expected 0.0 | Actual 0
    ✅ Cases: Expected 0 | Actual 0
 
-❌ Row 25: Partial Access - Part X Does Not Apply
-   Status: FAIL
-   ❌ Clients: Expected 0.0 | Actual 13
-   ❌ Cases: Expected 0 | Actual 8
+✅ Row 25: Partial Access - Part X Does Not Apply
+   Status: PASS
+   ✅ Clients: Expected 13.0 | Actual 13
+   ✅ Cases: Expected 8 | Actual 8
 
 ❌ Row 26: Partial Access - Other
    Status: FAIL
    ❌ Clients: Expected 4.0 | Actual 12
    ❌ Cases: Expected 2 | Actual 8
 
-❌ Row 27: Partial Access - Cannot Be Severed
-   Status: FAIL
-   ❌ Clients: Expected 2.0 | Actual 114
-   ❌ Cases: Expected 2 | Actual 75
+✅ Row 27: Partial Access - Cannot Be Severed
+   Status: PASS
+   ✅ Clients: Expected 114.0 | Actual 114
+   ✅ Cases: Expected 75 | Actual 75
 
 ✅ Row 28: No Info Released - Part X Deny
    Status: PASS
@@ -881,10 +989,10 @@ FINAL VERIFICATION REPORT
    ✅ Clients: Expected 5.0 | Actual 5
    ✅ Cases: Expected 5 | Actual 5
 
-❌ Row 30: No Info Released - Part X Does Not Apply
-   Status: FAIL
-   ❌ Clients: Expected 0.0 | Actual 9
-   ❌ Cases: Expected 0 | Actual 6
+✅ Row 30: No Info Released - Part X Does Not Apply
+   Status: PASS
+   ✅ Clients: Expected 9.0 | Actual 9
+   ✅ Cases: Expected 6 | Actual 6
 
 ❌ Row 31: No Info Released - Other
    Status: FAIL
@@ -906,6 +1014,8 @@ FINAL VERIFICATION REPORT
    ✅ Clients: Expected 52.0 | Actual 52
    ✅ Cases: Expected 20 | Actual 20
    ✅ Participants: Expected 85.0 | Actual 85
+   ✅ Intake Cases: Expected 46 | Actual 46
+
 ✅ Row 35: Documentation Completed
    Status: PASS
    ✅ Clients: Expected 131.0 | Actual 131
@@ -924,7 +1034,7 @@ FINAL VERIFICATION REPORT
    ✅ Cases: Expected 75 | Actual 75
 
 ================================================================================
-SUMMARY: 10 PASSED, 6 FAILED, 0 ERRORS
-SUCCESS RATE: 62.5%
+SUMMARY: 13 PASSED, 3 FAILED, 0 ERRORS
+SUCCESS RATE: 81.2%
 ================================================================================
 '''
