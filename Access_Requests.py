@@ -770,18 +770,27 @@ def verify_row_36(results, summary_row):
     """Verify Total Distinct Outcomes (Sum of Rows 22-35)"""
     print(f"\n🔍 Verifying Row {summary_row['row']}: Total Distinct Outcomes")
     
-    # Sum values from rows 22-35 (index 0-13 in results)
+    # Sum EXPECTED values from rows 22-35 (index 0-13 in results)
     relevant_results = results[0:14]  # Rows 22-35
     
-    total_B = sum(r.get('actual_B', 0) for r in relevant_results if r.get('actual_B') not in [None, 'N/A'])
-    total_D = sum(r.get('actual_D', 0) for r in relevant_results if r.get('actual_D') not in [None, 'N/A'])
-    total_F = sum(r.get('actual_F', 0) for r in relevant_results if r.get('actual_F') not in [None, 'N/A'])
-    total_H = sum(r.get('actual_H', 0) for r in relevant_results if r.get('actual_H') not in [None, 'N/A'])
+    # Use EXPECTED values, not actual values
+    total_B = sum(r.get('expected_B', 0) for r in relevant_results if r.get('expected_B') not in [None, 'N/A'])
+    total_D = sum(r.get('expected_D', 0) for r in relevant_results if r.get('expected_D') not in [None, 'N/A'])
+    total_F = sum(r.get('expected_F', 0) for r in relevant_results if r.get('expected_F') not in [None, 'N/A'])
+    total_H = sum(r.get('expected_H', 0) for r in relevant_results if r.get('expected_H') not in [None, 'N/A'])
     
     B_match = total_B == summary_row['B']
     D_match = total_D == summary_row['D']
     F_match = total_F == summary_row['F']
     H_match = total_H == summary_row['H']
+    
+    # Debug output to see what's being summed
+    print(f"   Summing expected values from rows 22-35:")
+    for i, result in enumerate(relevant_results):
+        row_num = 22 + i
+        print(f"   Row {row_num}: B={result.get('expected_B', 0)}, D={result.get('expected_D', 0)}, F={result.get('expected_F', 'N/A')}, H={result.get('expected_H', 'N/A')}")
+    print(f"   Total Expected: B={total_B}, D={total_D}, F={total_F}, H={total_H}")
+    print(f"   Actual Summary: B={summary_row['B']}, D={summary_row['D']}, F={summary_row['F']}, H={summary_row['H']}")
     
     return {
         'row': summary_row['row'],
@@ -805,17 +814,24 @@ def verify_row_37(results, summary_row):
     """Verify Total Partial or No Info Released - Part X Deny (Row 23 + Row 28)"""
     print(f"\n🔍 Verifying Row {summary_row['row']}: Partial/No Info - Part X Deny")
     
-    # Get values from row 23 (index 1) and row 28 (index 6)
+    # Get EXPECTED values from row 23 (index 1) and row 28 (index 6)
     row_23 = results[1]  # Partial Access - Part X Deny
     row_28 = results[6]  # No Information Released - Part X Deny
     
-    total_B = (row_23.get('actual_B', 0) if row_23.get('actual_B') not in [None, 'N/A'] else 0) + \
-              (row_28.get('actual_B', 0) if row_28.get('actual_B') not in [None, 'N/A'] else 0)
-    total_D = (row_23.get('actual_D', 0) if row_23.get('actual_D') not in [None, 'N/A'] else 0) + \
-              (row_28.get('actual_D', 0) if row_28.get('actual_D') not in [None, 'N/A'] else 0)
+    # Use EXPECTED values, not actual values
+    total_B = (row_23.get('expected_B', 0) if row_23.get('expected_B') not in [None, 'N/A'] else 0) + \
+              (row_28.get('expected_B', 0) if row_28.get('expected_B') not in [None, 'N/A'] else 0)
+    total_D = (row_23.get('expected_D', 0) if row_23.get('expected_D') not in [None, 'N/A'] else 0) + \
+              (row_28.get('expected_D', 0) if row_28.get('expected_D') not in [None, 'N/A'] else 0)
     
     B_match = total_B == summary_row['B']
     D_match = total_D == summary_row['D']
+    
+    # Debug output
+    print(f"   Row 23 Expected: B={row_23.get('expected_B', 0)}, D={row_23.get('expected_D', 0)}")
+    print(f"   Row 28 Expected: B={row_28.get('expected_B', 0)}, D={row_28.get('expected_D', 0)}")
+    print(f"   Total Expected: B={total_B}, D={total_D}")
+    print(f"   Actual Summary: B={summary_row['B']}, D={summary_row['D']}")
     
     return {
         'row': summary_row['row'],
@@ -942,8 +958,29 @@ VERIFICATION RESULTS
 🔍 Verifying Row 35: Documentation Completed
 
 🔍 Verifying Row 36: Total Distinct Outcomes
+   Summing expected values from rows 22-35:
+   Row 22: B=51.0, D=50, F=N/A, H=N/A
+   Row 23: B=0.0, D=0, F=N/A, H=N/A
+   Row 24: B=0.0, D=0, F=N/A, H=N/A
+   Row 25: B=13.0, D=8, F=N/A, H=N/A
+   Row 26: B=4.0, D=2, F=N/A, H=N/A
+   Row 27: B=114.0, D=75, F=N/A, H=N/A
+   Row 28: B=0.0, D=0, F=N/A, H=N/A
+   Row 29: B=5.0, D=5, F=N/A, H=N/A
+   Row 30: B=9.0, D=6, F=N/A, H=N/A
+   Row 31: B=4.0, D=3, F=N/A, H=N/A
+   Row 32: B=0.0, D=0, F=N/A, H=N/A
+   Row 33: B=0, D=0, F=89.0, H=62
+   Row 34: B=52.0, D=20, F=85.0, H=46
+   Row 35: B=131.0, D=92, F=N/A, H=N/A
+   Total Expected: B=383.0, D=261, F=174.0, H=108
+   Actual Summary: B=506, D=343, F=174, H=108
 
 🔍 Verifying Row 37: Partial/No Info - Part X Deny
+   Row 23 Expected: B=0.0, D=0
+   Row 28 Expected: B=0.0, D=0
+   Total Expected: B=0.0, D=0
+   Actual Summary: B=114, D=75
 
 ================================================================================
 FINAL VERIFICATION REPORT
@@ -1021,20 +1058,20 @@ FINAL VERIFICATION REPORT
    ✅ Clients: Expected 131.0 | Actual 131
    ✅ Cases: Expected 92 | Actual 92
 
-✅ Row 36: Total Distinct Outcomes
-   Status: PASS
-   ✅ Clients: Expected 506 | Actual 506
-   ✅ Cases: Expected 343 | Actual 343
-   ✅ Participants: Expected 174 | Actual 174
+❌ Row 36: Total Distinct Outcomes
+   Status: FAIL
+   ❌ Clients: Expected 383.0 | Actual 506
+   ❌ Cases: Expected 261 | Actual 343
+   ✅ Participants: Expected 174.0 | Actual 174
    ✅ Intake Cases: Expected 108 | Actual 108
 
-✅ Row 37: Partial/No Info - Part X Deny
-   Status: PASS
-   ✅ Clients: Expected 114 | Actual 114
-   ✅ Cases: Expected 75 | Actual 75
+❌ Row 37: Partial/No Info - Part X Deny
+   Status: FAIL
+   ❌ Clients: Expected 0.0 | Actual 114
+   ❌ Cases: Expected 0 | Actual 75
 
 ================================================================================
-SUMMARY: 13 PASSED, 3 FAILED, 0 ERRORS
-SUCCESS RATE: 81.2%
+SUMMARY: 11 PASSED, 5 FAILED, 0 ERRORS
+SUCCESS RATE: 68.8%
 ================================================================================
 '''
